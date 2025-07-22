@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users can read and write their own user document
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Transaction rules - more complex security
+    match /transactions/{transactionId} {
+      // Users can read transactions where they are either payer or receiver
+      allow read: if request.auth != null && 
+        (request.auth.uid == resource.data.payerId || 
+         request.auth.uid == resource.data.receiverId);
+      
+      // Only allow creating transactions (no updates or deletes for security)
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.payerId &&
+        request.resource.data.payerId is string &&
+        request.resource.data.receiverId is string &&
+        request.resource.data.amount is number &&
+        request.resource.data.amount > 0 &&
+        request.resource.data.type in ['top_up', 'invoice_payment', 'product_payment'] &&
+        request.resource.data.timestamp is timestamp &&
+        request.resource.data.status == 'completed';
+    }
+
+    // Admin access (optional - for future admin features)
+    match /{document=**} {
+      allow read, write: if request.auth != null && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Deny all other operations
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
