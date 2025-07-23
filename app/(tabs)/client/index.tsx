@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Alert, RefreshControl, FlatList } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Wallet, Plus, Receipt, ShoppingCart, Clock, TrendingUp, Smartphone, PackaTrendingDown, ge, DollarSign, TriangleAlert as AlertTriangle } from 'lucide-react-native';
+import { Wallet, Plus, Receipt, ShoppingCart, Clock, TrendingUp, Smartphone, Package, TrendingDown, DollarSign, TriangleAlert as AlertTriangle } from 'lucide-react-native';
 import { Button } from '../../../components/Button';
 import { DashboardLayout } from '../../../components/DashboardLayout';
 import { DashboardCard } from '../../../components/DashboardCard';
@@ -107,6 +107,10 @@ export default function ClientDashboard() {
 
             {/* Low Stock Alert */}
             <AlertCard
+              title="Low Stock Alert"
+              items={lowStockItems}
+            />
+
               title="Low Stock Alert"
               items={lowStockItems}
             />
