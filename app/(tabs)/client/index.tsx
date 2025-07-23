@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, Alert, RefreshControl, FlatList } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Wallet, Plus, Receipt, ShoppingCart, Clock, TrendingUp, Smartphone } from 'lucide-react-native';
-import { Card } from '../../../components/Card';
+import { Wallet, Plus, Receipt, ShoppingCart, Clock, TrendingUp, Smartphone, Package, DollarSign, AlertTriangle } from 'lucide-react-native';
 import { Button } from '../../../components/Button';
-import { StatusIndicator } from '../../../components/StatusIndicator';
+import { DashboardLayout } from '../../../components/DashboardLayout';
+import { DashboardCard } from '../../../components/DashboardCard';
+import { AlertCard } from '../../../components/AlertCard';
+import { Card } from '../../../components/Card';
 import { useAuth } from '../../../contexts/AuthContext';
 import { getUserTransactions } from '../../../services/walletService';
 import { formatCurrency } from '../../../constants/paymentMethods';
@@ -15,6 +17,19 @@ export default function ClientDashboard() {
   const router = useRouter();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Mock data for dashboard
+  const dashboardData = {
+    totalProducts: 6,
+    inventoryValue: 955.00,
+    lowStockItems: 5,
+    todaysSales: 0.00
+  };
+
+  const lowStockItems = [
+    { id: '1', name: '1 QUIRE', sku: '04417484', currentStock: 2, minStock: 10 },
+    { id: '2', name: '1 quire', sku: '6009631870000', currentStock: 2, minStock: 10 },
+  ];
 
   useEffect(() => {
     if (user) {
@@ -44,170 +59,127 @@ export default function ClientDashboard() {
   };
 
   return (
-    <ScrollView 
-      style={styles.container}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+    <DashboardLayout 
+      title="Dashboard" 
+      subtitle="Welcome to your inventory management system"
     >
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <Text style={styles.greeting}>Welcome back!</Text>
-          <StatusIndicator status="online" />
-        </View>
-        <Text style={styles.username}>{user?.displayName || user?.email}</Text>
-      </View>
-
-      {/* Wallet Balance Card */}
-      <Card style={styles.balanceCard}>
-        <View style={styles.balanceHeader}>
-          <View style={styles.balanceIconContainer}>
-            <Wallet size={24} color="#3B82F6" />
-          </View>
-          <Text style={styles.balanceLabel}>Wallet Balance</Text>
-        </View>
-        <Text style={styles.balanceAmount}>
-          {formatCurrency(user?.walletBalance || 0)}
-        </Text>
-        <Text style={styles.balanceCurrency}>Emalangeni (SZL)</Text>
-        <View style={styles.balanceActions}>
-          <Button
-            title="💳 Top Up"
-            onPress={() => router.push('/(tabs)/client/top-up')}
-            variant="success"
-            size="small"
-            style={styles.actionButton}
-          />
-          <Button
-            title="📊 History"
-            onPress={() => router.push('/(tabs)/client/transactions')}
-            variant="secondary"
-            size="small"
-            style={styles.actionButton}
-          />
-        </View>
-      </Card>
-
-      {/* Quick Actions */}
-      <Card title="Quick Actions">
-        <View style={styles.actionsGrid}>
-          <Button
-            title="📄 Pay Invoice"
-            onPress={() => router.push('/(tabs)/client/pay-invoice')}
-            variant="primary"
-            style={styles.actionButton}
-          />
-          <Button
-            title="🛒 Buy Products"
-            onPress={() => router.push('/(tabs)/client/pay-product')}
-            variant="primary"
-            style={styles.actionButton}
-          />
-        </View>
-      </Card>
-
-      {/* Recent Transactions */}
-      <Card title="Recent Transactions">
-        {transactions.length === 0 ? (
-          <Text style={styles.noTransactions}>No transactions yet</Text>
-        ) : (
-          transactions.map((transaction) => (
-            <View key={transaction.id} style={styles.transactionItem}>
-              <View style={styles.transactionIcon}>
-                {getTransactionIcon(transaction.type)}
+      <FlatList
+        style={styles.container}
+        data={[{ key: 'dashboard' }]}
+        renderItem={() => (
+          <View style={styles.content}>
+            {/* Dashboard Cards Grid */}
+            <View style={styles.cardsGrid}>
+              <View style={styles.cardRow}>
+                <DashboardCard
+                  title="Total Products"
+                  value={dashboardData.totalProducts}
+                  icon={Package}
+                  iconColor="#3B82F6"
+                  style={styles.card}
+                />
+                <DashboardCard
+                  title="Inventory Value"
+                  value={`£${dashboardData.inventoryValue.toFixed(2)}`}
+                  icon={DollarSign}
+                  iconColor="#10B981"
+                  style={styles.card}
+                />
               </View>
-              <View style={styles.transactionInfo}>
-                <Text style={styles.transactionDescription}>
-                  {transaction.description || transaction.type.replace('_', ' ').toUpperCase()}
-                </Text>
-                <Text style={styles.transactionDate}>
-                  {(transaction.timestamp instanceof Date ? 
-                    transaction.timestamp : 
-                    transaction.timestamp.toDate()).toLocaleDateString()}
-                </Text>
+              
+              <View style={styles.cardRow}>
+                <DashboardCard
+                  title="Low Stock Items"
+                  value={dashboardData.lowStockItems}
+                  icon={TrendingDown}
+                  iconColor="#EF4444"
+                  style={styles.card}
+                />
+                <DashboardCard
+                  title="Today's Sales"
+                  value={`£${dashboardData.todaysSales.toFixed(2)}`}
+                  icon={ShoppingCart}
+                  iconColor="#8B5CF6"
+                  style={styles.card}
+                />
               </View>
-              <Text style={[
-                styles.transactionAmount,
-                transaction.type === 'top_up' ? styles.positive : styles.negative
-              ]}>
-                {transaction.type === 'top_up' ? '+' : '-'}{formatCurrency(transaction.amount)}
-              </Text>
             </View>
-          ))
-        )}
-        {transactions.length > 0 && (
-          <Button
-            title="View All Transactions"
-            onPress={() => router.push('/(tabs)/client/transactions')}
-            variant="secondary"
-            size="small"
-            style={styles.viewAllButton}
-          />
-        )}
-      </Card>
-
-      {/* Quick Stats */}
-      <Card title="Quick Stats">
-        <View style={styles.statsGrid}>
-          <View style={styles.statItem}>
-            <Smartphone size={16} color="#10B981" />
-            <Text style={styles.statLabel}>This Month</Text>
-            <Text style={styles.statValue}>
-              {formatCurrency(
-                transactions
-                  .filter(t => {
-                    const date = t.timestamp instanceof Date ? t.timestamp : t.timestamp.toDate();
-                    const thisMonth = new Date().getMonth();
-                    return date.getMonth() === thisMonth;
-                  })
-                  .reduce((sum, t) => sum + (t.type === 'top_up' ? t.amount : -t.amount), 0)
-              )}
-            </Text>
-          </View>
-          <View style={styles.statItem}>
-            <TrendingUp size={16} color="#3B82F6" />
-            <Text style={styles.statLabel}>Total Spent</Text>
-            <Text style={styles.statValue}>
-              {formatCurrency(
-                transactions
-                  .filter(t => t.type !== 'top_up')
-                  .reduce((sum, t) => sum + t.amount, 0)
-              )}
-            </Text>
-          </View>
-        </View>
-      </Card>
-    </ScrollView>
   );
 }
 
+            {/* Low Stock Alert */}
+            <AlertCard
+            {/* Quick Actions */}
+            <Card title="Quick Actions">
+              <View style={styles.actionsGrid}>
+                <Button
+                  title="💳 Top Up Wallet"
+                  onPress={() => router.push('/(tabs)/client/top-up')}
+                  variant="success"
+                  style={styles.actionButton}
+                />
+                <Button
+                  title="📊 View Transactions"
+                  onPress={() => router.push('/(tabs)/client/transactions')}
+                  variant="secondary"
+                  style={styles.actionButton}
+                />
+              </View>
+              <View style={styles.actionsGrid}>
+                <Button
+                  title="📄 Pay Invoice"
+                  onPress={() => router.push('/(tabs)/client/pay-invoice')}
+                  variant="primary"
+                  style={styles.actionButton}
+                />
+                <Button
+                  title="🛒 Buy Products"
+                  onPress={() => router.push('/(tabs)/client/pay-product')}
+                  variant="primary"
+                  style={styles.actionButton}
+                />
+              </View>
+            </Card>
+          </View>
+        )}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        showsVerticalScrollIndicator={false}
+      />
+    </DashboardLayout>
+              title="Low Stock Alert"
+              items={lowStockItems}
+            />
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#111827',
+  },
+  content: {
     paddingHorizontal: 20,
+    paddingVertical: 20,
   },
-  header: {
-    paddingTop: 60,
-    paddingBottom: 20,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  greeting: {
-    fontSize: 16,
-    color: '#9CA3AF',
-  },
-  username: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#F9FAFB',
-    marginTop: 4,
-  },
-  balanceCard: {
+  cardsGrid: {
     marginBottom: 20,
   },
-  balanceHeader: {
+  cardRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  card: {
+    flex: 1,
+    marginHorizontal: 6,
+  },
+  actionsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 8,
+  },
+  actionButton: {
+    flex: 1,
+    marginHorizontal: 4,
+  },
+});
+
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
