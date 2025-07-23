@@ -111,10 +111,6 @@ export default function ClientDashboard() {
               items={lowStockItems}
             />
 
-              title="Low Stock Alert"
-              items={lowStockItems}
-            />
-
             {/* Quick Actions */}
             <Card title="Quick Actions">
               <View style={styles.actionsGrid}>
