@@ -1,25 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
-import { 
-  LayoutDashboard, 
-  Package, 
-  DollarSign, 
-  TrendingDown, 
-  ShoppingCart, 
-  BarChart3, 
-  Settings, 
-  User, 
-  LogOut,
-  Wallet,
-  Store,
-  Receipt,
-  CreditCard,
-  Activity,
-  Plus,
-  FileText,
-  TrendingUp
-} from 'lucide-react-native';
+import { LayoutDashboard, Package, DollarSign, TrendingDown, ShoppingCart, ChartBar as BarChart3, Settings, User, LogOut, Wallet, Store, Receipt, CreditCard, Activity, Plus, FileText, TrendingUp } from 'lucide-react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { formatCurrency } from '../../constants/paymentMethods';
 
