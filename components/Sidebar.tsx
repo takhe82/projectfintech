@@ -1,18 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
-import { 
-  Home, 
-  Package, 
-  DollarSign, 
-  TrendingDown, 
-  ShoppingCart, 
-  BarChart3, 
-  Settings, 
-  User,
-  LogOut,
-  X
-} from 'lucide-react-native';
+import { Chrome as Home, Package, DollarSign, TrendingDown, ShoppingCart, ChartBar as BarChart3, Settings, User, LogOut, X } from 'lucide-react-native';
 import { useAuth } from '../contexts/AuthContext';
 
 interface SidebarProps {
