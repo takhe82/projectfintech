@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Alert, RefreshControl, FlatList } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Wallet, Plus, Receipt, ShoppingCart, Clock, TrendingUp, Smartphone, Package, DollarSign, AlertTriangle } from 'lucide-react-native';
+import { Wallet, Plus, Receipt, ShoppingCart, Clock, TrendingUp, Smartphone, PackaTrendingDown, ge, DollarSign, TriangleAlert as AlertTriangle } from 'lucide-react-native';
 import { Button } from '../../../components/Button';
 import { DashboardLayout } from '../../../components/DashboardLayout';
 import { DashboardCard } from '../../../components/DashboardCard';
@@ -104,11 +104,13 @@ export default function ClientDashboard() {
                 />
               </View>
             </View>
-  );
-}
 
             {/* Low Stock Alert */}
             <AlertCard
+              title="Low Stock Alert"
+              items={lowStockItems}
+            />
+
             {/* Quick Actions */}
             <Card title="Quick Actions">
               <View style={styles.actionsGrid}>
@@ -146,9 +148,9 @@ export default function ClientDashboard() {
         showsVerticalScrollIndicator={false}
       />
     </DashboardLayout>
-              title="Low Stock Alert"
-              items={lowStockItems}
-            />
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -178,8 +180,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 4,
   },
-});
-
+  balanceHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
@@ -211,14 +212,6 @@ const styles = StyleSheet.create({
   balanceActions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-  },
-  actionsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  actionButton: {
-    flex: 1,
-    marginHorizontal: 4,
   },
   transactionItem: {
     flexDirection: 'row',
