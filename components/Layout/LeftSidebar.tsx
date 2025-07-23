@@ -15,9 +15,13 @@ import {
   Store,
   Receipt,
   CreditCard,
-  Activity
+  Activity,
+  Plus,
+  FileText,
+  TrendingUp
 } from 'lucide-react-native';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { formatCurrency } from '../../constants/paymentMethods';
 
 export const LeftSidebar: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -29,31 +33,36 @@ export const LeftSidebar: React.FC = () => {
       id: 'dashboard', 
       title: 'Dashboard', 
       icon: LayoutDashboard, 
-      route: '/(tabs)/client' 
+      route: '/(tabs)/client',
+      color: '#3B82F6'
     },
     { 
       id: 'wallet', 
-      title: 'Wallet', 
-      icon: Wallet, 
-      route: '/(tabs)/client/top-up' 
+      title: 'Top Up Wallet', 
+      icon: Plus, 
+      route: '/(tabs)/client/top-up',
+      color: '#10B981'
     },
     { 
       id: 'transactions', 
       title: 'Transactions', 
       icon: Activity, 
-      route: '/(tabs)/client/transactions' 
+      route: '/(tabs)/client/transactions',
+      color: '#8B5CF6'
     },
     { 
       id: 'pay-invoice', 
       title: 'Pay Invoice', 
-      icon: Receipt, 
-      route: '/(tabs)/client/pay-invoice' 
+      icon: FileText, 
+      route: '/(tabs)/client/pay-invoice',
+      color: '#F59E0B'
     },
     { 
       id: 'buy-products', 
       title: 'Buy Products', 
       icon: ShoppingCart, 
-      route: '/(tabs)/client/pay-product' 
+      route: '/(tabs)/client/pay-product',
+      color: '#EF4444'
     },
   ];
 
@@ -62,43 +71,50 @@ export const LeftSidebar: React.FC = () => {
       id: 'dashboard', 
       title: 'Dashboard', 
       icon: LayoutDashboard, 
-      route: '/(tabs)/merchant' 
+      route: '/(tabs)/merchant',
+      color: '#3B82F6'
     },
     { 
       id: 'products', 
       title: 'Products', 
       icon: Package, 
-      route: '/(tabs)/products' 
+      route: '/(tabs)/products',
+      color: '#10B981'
     },
     { 
       id: 'inventory', 
       title: 'Inventory', 
       icon: BarChart3, 
-      route: '/(tabs)/inventory' 
+      route: '/(tabs)/inventory',
+      color: '#8B5CF6'
     },
     { 
       id: 'sales', 
       title: 'Sales', 
-      icon: DollarSign, 
-      route: '/(tabs)/sales' 
+      icon: TrendingUp, 
+      route: '/(tabs)/sales',
+      color: '#F59E0B'
     },
     { 
       id: 'low-stock', 
       title: 'Low Stock', 
       icon: TrendingDown, 
-      route: '/(tabs)/low-stock' 
+      route: '/(tabs)/low-stock',
+      color: '#EF4444'
     },
     { 
       id: 'orders', 
       title: 'Orders', 
       icon: ShoppingCart, 
-      route: '/(tabs)/orders' 
+      route: '/(tabs)/orders',
+      color: '#06B6D4'
     },
     { 
-      id: 'transactions', 
+      id: 'payments', 
       title: 'Payments', 
       icon: CreditCard, 
-      route: '/(tabs)/merchant/transactions' 
+      route: '/(tabs)/merchant/transactions',
+      color: '#84CC16'
     },
   ];
 
@@ -125,27 +141,42 @@ export const LeftSidebar: React.FC = () => {
       {/* Logo Section */}
       <View style={styles.logoSection}>
         <View style={styles.logoContainer}>
-          <Store size={28} color="#3B82F6" />
-          <Text style={styles.logoText}>StockFlow</Text>
+          <Wallet size={32} color="#3B82F6" />
+          <View style={styles.logoText}>
+            <Text style={styles.appName}>PayFlow</Text>
+            <Text style={styles.appTagline}>Eswatini Digital Wallet</Text>
+          </View>
         </View>
-        <Text style={styles.logoSubtext}>Inventory Management</Text>
       </View>
 
-      {/* User Info */}
+      {/* User Profile Section */}
       <View style={styles.userSection}>
         <View style={styles.userAvatar}>
-          <User size={20} color="#3B82F6" />
+          <User size={24} color="#3B82F6" />
         </View>
         <View style={styles.userInfo}>
           <Text style={styles.userName}>{user?.displayName || 'User'}</Text>
-          <Text style={styles.userRole}>{user?.role?.toUpperCase()}</Text>
+          <Text style={styles.userEmail}>{user?.email}</Text>
+          <View style={styles.roleBadge}>
+            <Text style={styles.roleText}>{user?.role?.toUpperCase()}</Text>
+          </View>
         </View>
+      </View>
+
+      {/* Wallet Balance */}
+      <View style={styles.balanceSection}>
+        <View style={styles.balanceHeader}>
+          <Wallet size={16} color="#10B981" />
+          <Text style={styles.balanceLabel}>Wallet Balance</Text>
+        </View>
+        <Text style={styles.balanceAmount}>{formatCurrency(user?.walletBalance || 0)}</Text>
+        <Text style={styles.balanceCurrency}>Emalangeni (SZL)</Text>
       </View>
 
       {/* Navigation Menu */}
       <ScrollView style={styles.menuContainer} showsVerticalScrollIndicator={false}>
         <View style={styles.menuSection}>
-          <Text style={styles.menuSectionTitle}>MAIN MENU</Text>
+          <Text style={styles.menuSectionTitle}>MAIN NAVIGATION</Text>
           {menuItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.route);
@@ -157,16 +188,19 @@ export const LeftSidebar: React.FC = () => {
                 onPress={() => handleNavigation(item.route)}
                 activeOpacity={0.7}
               >
-                <Icon 
-                  size={20} 
-                  color={active ? '#3B82F6' : '#9CA3AF'} 
-                />
+                <View style={[styles.menuIconContainer, { backgroundColor: active ? item.color + '20' : 'transparent' }]}>
+                  <Icon 
+                    size={20} 
+                    color={active ? item.color : '#64748B'} 
+                  />
+                </View>
                 <Text style={[
                   styles.menuItemText, 
-                  active && styles.activeMenuItemText
+                  active && { color: item.color }
                 ]}>
                   {item.title}
                 </Text>
+                {active && <View style={[styles.activeIndicator, { backgroundColor: item.color }]} />}
               </TouchableOpacity>
             );
           })}
@@ -178,15 +212,19 @@ export const LeftSidebar: React.FC = () => {
             style={styles.menuItem}
             onPress={() => handleNavigation('/(tabs)/profile')}
           >
-            <Settings size={20} color="#9CA3AF" />
-            <Text style={styles.menuItemText}>Settings</Text>
+            <View style={styles.menuIconContainer}>
+              <Settings size={20} color="#64748B" />
+            </View>
+            <Text style={styles.menuItemText}>Profile & Settings</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.menuItem}
             onPress={handleSignOut}
           >
-            <LogOut size={20} color="#EF4444" />
+            <View style={styles.menuIconContainer}>
+              <LogOut size={20} color="#EF4444" />
+            </View>
             <Text style={[styles.menuItemText, { color: '#EF4444' }]}>
               Sign Out
             </Text>
@@ -196,8 +234,10 @@ export const LeftSidebar: React.FC = () => {
 
       {/* Footer */}
       <View style={styles.footer}>
-        <Text style={styles.footerText}>© 2025 StockFlow</Text>
-        <Text style={styles.footerVersion}>v1.0.0</Text>
+        <View style={styles.footerContent}>
+          <Text style={styles.footerText}>🇸🇿 Kingdom of Eswatini</Text>
+          <Text style={styles.footerVersion}>PayFlow v1.0.0</Text>
+        </View>
       </View>
     </View>
   );
@@ -205,48 +245,57 @@ export const LeftSidebar: React.FC = () => {
 
 const styles = StyleSheet.create({
   sidebar: {
-    width: 280,
-    backgroundColor: '#1F2937',
+    width: 320,
+    backgroundColor: '#1E293B',
     height: '100%',
     borderRightWidth: 1,
-    borderRightColor: '#374151',
+    borderRightColor: '#334155',
     flexDirection: 'column',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 2,
+      height: 0,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
   },
   logoSection: {
     padding: 24,
     borderBottomWidth: 1,
-    borderBottomColor: '#374151',
+    borderBottomColor: '#334155',
   },
   logoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
   },
   logoText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#F9FAFB',
     marginLeft: 12,
   },
-  logoSubtext: {
+  appName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#F8FAFC',
+  },
+  appTagline: {
     fontSize: 12,
-    color: '#9CA3AF',
-    marginLeft: 40,
+    color: '#64748B',
+    marginTop: 2,
   },
   userSection: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#374151',
+    backgroundColor: '#334155',
     marginHorizontal: 16,
     marginVertical: 16,
-    borderRadius: 12,
+    borderRadius: 16,
   },
   userAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#1F2937',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#1E293B',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -257,13 +306,53 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#F9FAFB',
+    color: '#F8FAFC',
   },
-  userRole: {
+  userEmail: {
     fontSize: 12,
-    color: '#3B82F6',
+    color: '#94A3B8',
     marginTop: 2,
+  },
+  roleBadge: {
+    backgroundColor: '#3B82F6',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+    marginTop: 6,
+    alignSelf: 'flex-start',
+  },
+  roleText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  balanceSection: {
+    backgroundColor: '#065F46',
+    marginHorizontal: 16,
+    marginBottom: 16,
+    padding: 16,
+    borderRadius: 16,
+  },
+  balanceHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  balanceLabel: {
+    fontSize: 12,
+    color: '#A7F3D0',
+    marginLeft: 6,
     fontWeight: '500',
+  },
+  balanceAmount: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 2,
+  },
+  balanceCurrency: {
+    fontSize: 11,
+    color: '#6EE7B7',
   },
   menuContainer: {
     flex: 1,
@@ -275,7 +364,7 @@ const styles = StyleSheet.create({
   menuSectionTitle: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#6B7280',
+    color: '#64748B',
     marginBottom: 12,
     marginLeft: 12,
     letterSpacing: 0.5,
@@ -283,37 +372,54 @@ const styles = StyleSheet.create({
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: 12,
     marginVertical: 2,
+    position: 'relative',
   },
   activeMenuItem: {
-    backgroundColor: '#1E3A8A',
+    backgroundColor: '#334155',
+  },
+  menuIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
   },
   menuItemText: {
     fontSize: 14,
-    color: '#9CA3AF',
-    marginLeft: 12,
+    color: '#94A3B8',
     fontWeight: '500',
+    flex: 1,
   },
-  activeMenuItemText: {
-    color: '#3B82F6',
-    fontWeight: '600',
+  activeIndicator: {
+    position: 'absolute',
+    right: 0,
+    top: '50%',
+    marginTop: -12,
+    width: 3,
+    height: 24,
+    borderRadius: 2,
   },
   footer: {
     padding: 20,
     borderTopWidth: 1,
-    borderTopColor: '#374151',
+    borderTopColor: '#334155',
+  },
+  footerContent: {
     alignItems: 'center',
   },
   footerText: {
     fontSize: 12,
-    color: '#6B7280',
+    color: '#64748B',
+    textAlign: 'center',
   },
   footerVersion: {
     fontSize: 10,
-    color: '#4B5563',
+    color: '#475569',
     marginTop: 4,
   },
 });

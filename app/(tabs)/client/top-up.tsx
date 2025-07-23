@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert, ScrollView, Modal } from 'react-native';
+import { View, Text, StyleSheet, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Wallet, Smartphone, CreditCard } from 'lucide-react-native';
+import { AppLayout } from '../../../components/Layout/AppLayout';
+import { ContentContainer } from '../../../components/Layout/ContentContainer';
+import { ContentGrid } from '../../../components/UI/ContentGrid';
 import { Input } from '../../../components/Input';
 import { Button } from '../../../components/Button';
 import { Card } from '../../../components/Card';
@@ -19,7 +22,6 @@ export default function TopUpScreen() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const presetAmounts = [50, 100, 250, 500, 1000, 2500];
 
@@ -76,7 +78,6 @@ export default function TopUpScreen() {
 
   const handlePaymentMethodSelect = (methodId: string) => {
     setSelectedPaymentMethod(methodId);
-    setShowPaymentModal(true);
   };
 
   const renderPaymentDetails = () => {
@@ -121,99 +122,82 @@ export default function TopUpScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Button
-          title="← Back"
-          onPress={() => router.back()}
-          variant="secondary"
-          size="small"
-          style={styles.backButton}
-        />
-        <Text style={styles.title}>Top Up Wallet</Text>
-        <StatusIndicator status="online" />
-      </View>
+    <AppLayout title="Top Up Wallet" subtitle="Add funds to your digital wallet">
+      <ContentContainer>
+        <ContentGrid>
+          {/* Left Column - Amount & Balance */}
+          <View style={styles.leftColumn}>
+            <Card>
+              <View style={styles.currentBalance}>
+                <Wallet size={20} color="#3B82F6" />
+                <Text style={styles.currentBalanceLabel}>Current Balance</Text>
+              </View>
+              <Text style={styles.balanceAmount}>{formatCurrency(user?.walletBalance || 0)}</Text>
+            </Card>
 
-      <Card>
-        <View style={styles.currentBalance}>
-          <Wallet size={20} color="#3B82F6" />
-          <Text style={styles.currentBalanceLabel}>Current Balance</Text>
-        </View>
-        <Text style={styles.balanceAmount}>{formatCurrency(user?.walletBalance || 0)}</Text>
-      </Card>
+            <Card title="Top Up Amount">
+              <Input
+                label="Enter Amount (Emalangeni)"
+                value={amount}
+                onChangeText={setAmount}
+                keyboardType="numeric"
+                placeholder="0.00"
+              />
 
-      <Card title="Top Up Amount">
-        <Input
-          label="Enter Amount (Emalangeni)"
-          value={amount}
-          onChangeText={setAmount}
-          keyboardType="numeric"
-          placeholder="0.00"
-        />
+              <Text style={styles.presetsLabel}>Quick Select</Text>
+              <View style={styles.presetGrid}>
+                {presetAmounts.map((preset) => (
+                  <Button
+                    key={preset}
+                    title={formatCurrency(preset)}
+                    onPress={() => setAmount(preset.toString())}
+                    variant="secondary"
+                    size="small"
+                    style={styles.presetButton}
+                  />
+                ))}
+              </View>
+            </Card>
 
-        <Text style={styles.presetsLabel}>Quick Select</Text>
-        <View style={styles.presetGrid}>
-          {presetAmounts.map((preset) => (
-            <Button
-              key={preset}
-              title={formatCurrency(preset)}
-              onPress={() => setAmount(preset.toString())}
-              variant="secondary"
-              size="small"
-              style={styles.presetButton}
+            {renderPaymentDetails()}
+          </View>
+
+          {/* Right Column - Payment Methods */}
+          <View style={styles.rightColumn}>
+            <PaymentMethodSelector
+              selectedMethod={selectedPaymentMethod}
+              onSelectMethod={handlePaymentMethodSelect}
+              amount={parseFloat(amount) || 0}
             />
-          ))}
-        </View>
-      </Card>
 
-      <PaymentMethodSelector
-        selectedMethod={selectedPaymentMethod}
-        onSelectMethod={handlePaymentMethodSelect}
-        amount={parseFloat(amount) || 0}
-      />
+            <Card>
+              <Button
+                title={loading ? 'Processing Top-up...' : 'Top Up Wallet'}
+                onPress={handleTopUp}
+                disabled={loading || !selectedPaymentMethod || !amount}
+                variant="success"
+                style={styles.topUpButton}
+              />
 
-      {renderPaymentDetails()}
-
-      <Card>
-        <Button
-          title={loading ? 'Processing Top-up...' : 'Top Up Wallet'}
-          onPress={handleTopUp}
-          disabled={loading || !selectedPaymentMethod || !amount}
-          variant="success"
-          style={styles.topUpButton}
-        />
-
-        <Text style={styles.securityNote}>
-          🔒 All transactions are secured with bank-level encryption
-        </Text>
-      </Card>
-    </ScrollView>
+              <Text style={styles.securityNote}>
+                🔒 All transactions are secured with bank-level encryption
+              </Text>
+            </Card>
+          </View>
+        </ContentGrid>
+      </ContentContainer>
+    </AppLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  leftColumn: {
     flex: 1,
-    backgroundColor: '#111827',
-    paddingHorizontal: 20,
+    gap: 24,
   },
-  header: {
-    paddingTop: 60,
-    paddingBottom: 20,
-    flexDirection: 'row', 
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  backButton: {
-    flex: 0,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#F9FAFB',
+  rightColumn: {
     flex: 1,
-    textAlign: 'center',
-    marginHorizontal: 16,
+    gap: 24,
   },
   currentBalance: {
     flexDirection: 'row',
@@ -222,18 +206,18 @@ const styles = StyleSheet.create({
   },
   currentBalanceLabel: {
     fontSize: 14,
-    color: '#9CA3AF',
+    color: '#64748B',
     marginLeft: 8,
   },
   balanceAmount: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#F9FAFB',
+    color: '#F8FAFC',
   },
   presetsLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#F9FAFB',
+    color: '#F8FAFC',
     marginTop: 20,
     marginBottom: 12,
   },
@@ -251,7 +235,7 @@ const styles = StyleSheet.create({
   },
   securityNote: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: '#64748B',
     textAlign: 'center',
     marginTop: 16,
   },

@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Wallet, TrendingUp, Users, Receipt, Package, DollarSign, TrendingDown, ShoppingCart } from 'lucide-react-native';
-import { MainLayout } from '../../../components/MainLayout';
+import { AppLayout } from '../../../components/Layout/AppLayout';
+import { ContentContainer } from '../../../components/Layout/ContentContainer';
+import { MetricGrid } from '../../../components/UI/MetricGrid';
+import { ContentGrid } from '../../../components/UI/ContentGrid';
 import { MetricCard } from '../../../components/MetricCard';
 import { AlertPanel } from '../../../components/AlertPanel';
 import { Card } from '../../../components/Card';
@@ -58,45 +61,40 @@ export default function MerchantDashboard() {
   };
 
   return (
-    <MainLayout title="Business Dashboard" subtitle="Monitor your business performance">
-      <View style={styles.container}>
+    <AppLayout title="Business Dashboard" subtitle="Monitor your business performance and growth">
+      <ContentContainer>
         {/* Metrics Grid */}
-        <View style={styles.metricsGrid}>
+        <MetricGrid>
           <MetricCard
             title="Total Products"
             value={dashboardData.totalProducts}
             icon={Package}
             iconColor="#3B82F6"
             trend={{ value: 12, isPositive: true }}
-            style={styles.metricCard}
           />
           <MetricCard
             title="Inventory Value"
-            value={`£${dashboardData.inventoryValue.toFixed(2)}`}
+            value={formatCurrency(dashboardData.inventoryValue)}
             icon={DollarSign}
             iconColor="#10B981"
             trend={{ value: 8, isPositive: true }}
-            style={styles.metricCard}
           />
           <MetricCard
-            title="Low Stock Items"
-            value={dashboardData.lowStockItems}
-            icon={TrendingDown}
-            iconColor="#EF4444"
-            trend={{ value: 15, isPositive: false }}
-            style={styles.metricCard}
+            title="Today's Revenue"
+            value={formatCurrency(getTodaysRevenue())}
+            icon={TrendingUp}
+            iconColor="#F59E0B"
           />
           <MetricCard
-            title="Today's Sales"
-            value={`£${getTodaysRevenue().toFixed(2)}`}
-            icon={ShoppingCart}
+            title="Active Customers"
+            value={getUniqueCustomers()}
+            icon={Users}
             iconColor="#8B5CF6"
-            style={styles.metricCard}
           />
-        </View>
+        </MetricGrid>
 
         {/* Content Grid */}
-        <View style={styles.contentGrid}>
+        <ContentGrid>
           {/* Alert Panel */}
           <View style={styles.alertSection}>
             <AlertPanel 
@@ -106,8 +104,8 @@ export default function MerchantDashboard() {
           </View>
 
           {/* Business Tools */}
-          <Card title="Business Tools" style={styles.toolsCard}>
-            <View style={styles.toolsGrid}>
+          <Card title="Business Tools" style={styles.businessToolsCard}>
+            <View style={styles.toolButtonsGrid}>
               <Button
                 title="📦 Manage Products"
                 onPress={() => router.push('/(tabs)/products')}
@@ -136,9 +134,15 @@ export default function MerchantDashboard() {
           </Card>
 
           {/* Recent Payments */}
-          <Card title="Recent Payments" style={styles.paymentsCard}>
+          <Card title="Recent Payments" style={styles.recentPaymentsCard}>
             {transactions.length === 0 ? (
-              <Text style={styles.noPayments}>No payments received yet</Text>
+              <View style={styles.emptyState}>
+                <Receipt size={48} color="#64748B" />
+                <Text style={styles.emptyStateTitle}>No Payments Yet</Text>
+                <Text style={styles.emptyStateText}>
+                  Customer payments will appear here
+                </Text>
+              </View>
             ) : (
               <View style={styles.paymentsList}>
                 {transactions.map((transaction) => (
@@ -167,44 +171,44 @@ export default function MerchantDashboard() {
               </View>
             )}
           </Card>
-        </View>
-      </View>
-    </MainLayout>
+        </ContentGrid>
+      </ContentContainer>
+    </AppLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 24,
-    gap: 24,
-  },
-  metricsGrid: {
-    flexDirection: 'row',
-    gap: 20,
-  },
-  metricCard: {
-    flex: 1,
-  },
-  contentGrid: {
-    flex: 1,
-    flexDirection: 'row',
-    gap: 24,
-  },
   alertSection: {
     flex: 1,
   },
-  toolsCard: {
+  businessToolsCard: {
     flex: 1,
   },
-  paymentsCard: {
+  recentPaymentsCard: {
     flex: 1,
   },
-  toolsGrid: {
+  toolButtonsGrid: {
     gap: 12,
   },
   toolButton: {
     marginVertical: 4,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#F8FAFC',
+    marginTop: 16,
+  },
+  emptyStateText: {
+    fontSize: 14,
+    color: '#64748B',
+    textAlign: 'center',
+    marginTop: 8,
   },
   paymentsList: {
     gap: 12,
@@ -214,7 +218,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 16,
-    backgroundColor: '#374151',
+    backgroundColor: '#334155',
     borderRadius: 12,
   },
   paymentIcon: {
@@ -232,28 +236,22 @@ const styles = StyleSheet.create({
   paymentCustomer: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#F9FAFB',
+    color: '#F8FAFC',
   },
   paymentDescription: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: '#64748B',
     textTransform: 'capitalize',
     marginTop: 2,
   },
   paymentDate: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: '#64748B',
     marginTop: 2,
   },
   paymentAmount: {
     fontSize: 14,
     fontWeight: '600',
     color: '#10B981',
-  },
-  noPayments: {
-    textAlign: 'center',
-    color: '#9CA3AF',
-    fontSize: 14,
-    padding: 20,
   },
 });

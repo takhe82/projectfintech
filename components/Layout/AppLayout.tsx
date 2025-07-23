@@ -1,24 +1,29 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Dimensions } from 'react-native';
 import { LeftSidebar } from './LeftSidebar';
-import { TopBar } from './TopBar';
+import { TopHeader } from './TopHeader';
+import { useAuth } from '../../contexts/AuthContext';
 
-interface MainLayoutProps {
+interface AppLayoutProps {
   children: React.ReactNode;
   title: string;
   subtitle?: string;
 }
 
-export const MainLayout: React.FC<MainLayoutProps> = ({ 
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
+export const AppLayout: React.FC<AppLayoutProps> = ({ 
   children, 
   title, 
   subtitle 
 }) => {
+  const { user } = useAuth();
+
   return (
     <View style={styles.container}>
       <LeftSidebar />
       <View style={styles.mainContent}>
-        <TopBar title={title} subtitle={subtitle} />
+        <TopHeader title={title} subtitle={subtitle} />
         <View style={styles.contentArea}>
           {children}
         </View>
@@ -31,14 +36,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: 'row',
-    backgroundColor: '#111827',
+    backgroundColor: '#0F172A',
+    height: screenHeight,
+    width: screenWidth,
   },
   mainContent: {
     flex: 1,
     flexDirection: 'column',
+    minHeight: screenHeight,
   },
   contentArea: {
     flex: 1,
-    backgroundColor: '#111827',
+    backgroundColor: '#0F172A',
+    overflow: 'hidden',
   },
 });

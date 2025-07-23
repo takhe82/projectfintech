@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { View, Text, StyleSheet } from 'react-native';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { AuthProvider } from '../contexts/AuthContext';
 
@@ -16,7 +15,7 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="+not-found" />
       </Stack>
-      <StatusBar style="light" />
+      <StatusBar style="light" backgroundColor="#0F172A" />
     </AuthProvider>
   );
 }

@@ -48,17 +48,18 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#1F2937',
+    backgroundColor: '#1E293B',
     borderRadius: 16,
     padding: 24,
+    flex: 1,
     borderWidth: 1,
-    borderColor: '#374151',
+    borderColor: '#334155',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 4,
     },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 4,
   },
@@ -79,7 +80,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
-    backgroundColor: '#374151',
   },
   trendText: {
     fontSize: 12,
@@ -88,12 +88,12 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#F9FAFB',
+    color: '#F8FAFC',
     marginBottom: 8,
   },
   title: {
     fontSize: 14,
-    color: '#9CA3AF',
+    color: '#64748B',
     fontWeight: '500',
   },
 });

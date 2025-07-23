@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Wallet, Plus, Receipt, ShoppingCart, TrendingUp, Package, DollarSign, TrendingDown } from 'lucide-react-native';
-import { MainLayout } from '../../../components/MainLayout';
+import { AppLayout } from '../../../components/Layout/AppLayout';
+import { ContentContainer } from '../../../components/Layout/ContentContainer';
+import { MetricGrid } from '../../../components/UI/MetricGrid';
+import { ContentGrid } from '../../../components/UI/ContentGrid';
 import { MetricCard } from '../../../components/MetricCard';
 import { AlertPanel } from '../../../components/AlertPanel';
 import { Button } from '../../../components/Button';
@@ -17,20 +20,6 @@ export default function ClientDashboard() {
   const router = useRouter();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
-  // Mock data for dashboard
-  const dashboardData = {
-    totalProducts: 6,
-    inventoryValue: 955.00,
-    lowStockItems: 5,
-    todaysSales: 0.00
-  };
-
-  const lowStockItems = [
-    { id: '1', name: '1 QUIRE', sku: '04417484', currentStock: 2, minStock: 10 },
-    { id: '2', name: '1 quire', sku: '6009631870000', currentStock: 2, minStock: 10 },
-    { id: '3', name: 'Office Supplies', sku: '12345678', currentStock: 1, minStock: 5 },
-  ];
-
   useEffect(() => {
     if (user) {
       const unsubscribe = getUserTransactions(user.id, (userTransactions) => {
@@ -40,6 +29,39 @@ export default function ClientDashboard() {
     }
   }, [user]);
 
+  const getTodaysTransactions = () => {
+    const today = new Date().toDateString();
+    return transactions.filter(t => {
+      const date = t.timestamp instanceof Date ? t.timestamp : 
+                   (t.timestamp.toDate ? t.timestamp.toDate() : new Date(t.timestamp));
+      return date.toDateString() === today;
+    }).length;
+  };
+
+  const getTodaysSpending = () => {
+    const today = new Date().toDateString();
+    return transactions
+      .filter(t => {
+        const date = t.timestamp instanceof Date ? t.timestamp : 
+                     (t.timestamp.toDate ? t.timestamp.toDate() : new Date(t.timestamp));
+        return date.toDateString() === today && t.type !== 'top_up';
+      })
+      .reduce((sum, t) => sum + t.amount, 0);
+  };
+
+  const getMonthlySpending = () => {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    return transactions
+      .filter(t => {
+        const date = t.timestamp instanceof Date ? t.timestamp : 
+                     (t.timestamp.toDate ? t.timestamp.toDate() : new Date(t.timestamp));
+        return date.getMonth() === currentMonth && 
+               date.getFullYear() === currentYear && 
+               t.type !== 'top_up';
+      })
+      .reduce((sum, t) => sum + t.amount, 0);
+  };
   const getTransactionIcon = (type: string) => {
     switch (type) {
       case 'top_up':
@@ -54,56 +76,41 @@ export default function ClientDashboard() {
   };
 
   return (
-    <MainLayout title="Dashboard" subtitle="Welcome to your inventory management system">
-      <View style={styles.container}>
+    <AppLayout title="Client Dashboard" subtitle="Manage your digital wallet and payments">
+      <ContentContainer>
         {/* Metrics Grid */}
-        <View style={styles.metricsGrid}>
+        <MetricGrid>
           <MetricCard
-            title="Total Products"
-            value={dashboardData.totalProducts}
-            icon={Package}
+            title="Wallet Balance"
+            value={formatCurrency(user?.walletBalance || 0)}
+            icon={Wallet}
             iconColor="#3B82F6"
-            trend={{ value: 12, isPositive: true }}
-            style={styles.metricCard}
           />
           <MetricCard
-            title="Inventory Value"
-            value={`£${dashboardData.inventoryValue.toFixed(2)}`}
-            icon={DollarSign}
+            title="Today's Transactions"
+            value={getTodaysTransactions()}
+            icon={Activity}
             iconColor="#10B981"
-            trend={{ value: 8, isPositive: true }}
-            style={styles.metricCard}
           />
           <MetricCard
-            title="Low Stock Items"
-            value={dashboardData.lowStockItems}
+            title="Today's Spending"
+            value={formatCurrency(getTodaysSpending())}
+            icon={Receipt}
+            iconColor="#F59E0B"
+          />
+          <MetricCard
+            title="Monthly Spending"
+            value={formatCurrency(getMonthlySpending())}
             icon={TrendingDown}
-            iconColor="#EF4444"
-            trend={{ value: 15, isPositive: false }}
-            style={styles.metricCard}
-          />
-          <MetricCard
-            title="Today's Sales"
-            value={`£${dashboardData.todaysSales.toFixed(2)}`}
-            icon={ShoppingCart}
             iconColor="#8B5CF6"
-            style={styles.metricCard}
           />
-        </View>
+        </MetricGrid>
 
         {/* Content Grid */}
-        <View style={styles.contentGrid}>
-          {/* Alert Panel */}
-          <View style={styles.alertSection}>
-            <AlertPanel 
-              items={lowStockItems}
-              onViewAll={() => router.push('/(tabs)/low-stock')}
-            />
-          </View>
-
+        <ContentGrid>
           {/* Quick Actions */}
-          <Card title="Quick Actions" style={styles.actionsCard}>
-            <View style={styles.actionsGrid}>
+          <Card title="Quick Actions" style={styles.quickActionsCard}>
+            <View style={styles.actionButtonsGrid}>
               <Button
                 title="💳 Top Up Wallet"
                 onPress={() => router.push('/(tabs)/client/top-up')}
@@ -132,9 +139,15 @@ export default function ClientDashboard() {
           </Card>
 
           {/* Recent Transactions */}
-          <Card title="Recent Activity" style={styles.transactionsCard}>
+          <Card title="Recent Activity" style={styles.recentActivityCard}>
             {transactions.length === 0 ? (
-              <Text style={styles.noTransactions}>No recent transactions</Text>
+              <View style={styles.emptyState}>
+                <Wallet size={48} color="#64748B" />
+                <Text style={styles.emptyStateTitle}>No Recent Activity</Text>
+                <Text style={styles.emptyStateText}>
+                  Your recent transactions will appear here
+                </Text>
+              </View>
             ) : (
               <View style={styles.transactionsList}>
                 {transactions.map((transaction) => (
@@ -163,44 +176,41 @@ export default function ClientDashboard() {
               </View>
             )}
           </Card>
-        </View>
-      </View>
-    </MainLayout>
+        </ContentGrid>
+      </ContentContainer>
+    </AppLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 24,
-    gap: 24,
-  },
-  metricsGrid: {
-    flexDirection: 'row',
-    gap: 20,
-  },
-  metricCard: {
+  quickActionsCard: {
     flex: 1,
   },
-  contentGrid: {
-    flex: 1,
-    flexDirection: 'row',
-    gap: 24,
-  },
-  alertSection: {
+  recentActivityCard: {
     flex: 1,
   },
-  actionsCard: {
-    flex: 1,
-  },
-  transactionsCard: {
-    flex: 1,
-  },
-  actionsGrid: {
+  actionButtonsGrid: {
     gap: 12,
   },
   actionButton: {
     marginVertical: 4,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#F8FAFC',
+    marginTop: 16,
+  },
+  emptyStateText: {
+    fontSize: 14,
+    color: '#64748B',
+    textAlign: 'center',
+    marginTop: 8,
   },
   transactionsList: {
     gap: 12,
@@ -210,14 +220,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 16,
-    backgroundColor: '#374151',
+    backgroundColor: '#334155',
     borderRadius: 12,
   },
   transactionIcon: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#1F2937',
+    backgroundColor: '#1E293B',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -228,12 +238,12 @@ const styles = StyleSheet.create({
   transactionDescription: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#F9FAFB',
+    color: '#F8FAFC',
     textTransform: 'capitalize',
   },
   transactionDate: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: '#64748B',
     marginTop: 2,
   },
   transactionAmount: {
@@ -245,11 +255,5 @@ const styles = StyleSheet.create({
   },
   negative: {
     color: '#EF4444',
-  },
-  noTransactions: {
-    textAlign: 'center',
-    color: '#9CA3AF',
-    fontSize: 14,
-    padding: 20,
   },
 });
