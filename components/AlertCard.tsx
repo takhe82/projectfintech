@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { AlertTriangle, Package } from 'lucide-react-native';
+import { TriangleAlert as AlertTriangle, Package } from 'lucide-react-native';
 
 interface LowStockItem {
   id: string;
