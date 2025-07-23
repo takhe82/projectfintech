@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Wallet, TrendingUp, Users, Clock, Receipt, ChartBar as BarChart3, Building2 } from 'lucide-react-native';
+import { Wallet, TrendingUp, Users, Receipt, Package, DollarSign, TrendingDown, ShoppingCart } from 'lucide-react-native';
+import { MainLayout } from '../../../components/MainLayout';
+import { MetricCard } from '../../../components/MetricCard';
+import { AlertPanel } from '../../../components/AlertPanel';
 import { Card } from '../../../components/Card';
 import { Button } from '../../../components/Button';
-import { StatusIndicator } from '../../../components/StatusIndicator';
 import { useAuth } from '../../../contexts/AuthContext';
 import { getMerchantTransactions } from '../../../services/walletService';
 import { formatCurrency } from '../../../constants/paymentMethods';
@@ -14,21 +16,29 @@ export default function MerchantDashboard() {
   const { user } = useAuth();
   const router = useRouter();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [refreshing, setRefreshing] = useState(false);
+
+  // Mock data for dashboard
+  const dashboardData = {
+    totalProducts: 6,
+    inventoryValue: 955.00,
+    lowStockItems: 5,
+    todaysSales: 0.00
+  };
+
+  const lowStockItems = [
+    { id: '1', name: '1 QUIRE', sku: '04417484', currentStock: 2, minStock: 10 },
+    { id: '2', name: '1 quire', sku: '6009631870000', currentStock: 2, minStock: 10 },
+    { id: '3', name: 'Office Supplies', sku: '12345678', currentStock: 1, minStock: 5 },
+  ];
 
   useEffect(() => {
     if (user) {
       const unsubscribe = getMerchantTransactions(user.id, (merchantTransactions) => {
-        setTransactions(merchantTransactions.slice(0, 5)); // Show last 5 transactions
+        setTransactions(merchantTransactions.slice(0, 5));
       });
       return unsubscribe;
     }
   }, [user]);
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
-  };
 
   const getTodaysRevenue = () => {
     const today = new Date().toDateString();
@@ -47,267 +57,203 @@ export default function MerchantDashboard() {
     return uniqueCustomers.size;
   };
 
-  const getTransactionIcon = (type: string) => {
-    switch (type) {
-      case 'invoice_payment':
-        return <Receipt size={16} color="#10B981" />;
-      case 'product_payment':
-        return <TrendingUp size={16} color="#10B981" />;
-      default:
-        return <Clock size={16} color="#9CA3AF" />;
-    }
-  };
-
   return (
-    <ScrollView 
-      style={styles.container}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-    >
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <Building2 size={24} color="#3B82F6" />
-          <Text style={styles.greeting}>Business Dashboard</Text>
-          <StatusIndicator status="online" />
-        </View>
-        <Text style={styles.username}>{user?.displayName || user?.email}</Text>
-      </View>
-
-      {/* Stats Overview */}
-      <View style={styles.statsGrid}>
-        <Card style={styles.statCard}>
-          <View style={styles.statHeader}>
-            <View style={styles.statIconContainer}>
-              <Wallet size={20} color="#3B82F6" />
-            </View>
-            <Text style={styles.statLabel}>Wallet Balance</Text>
-          </View>
-          <Text style={styles.statValue}>{formatCurrency(user?.walletBalance || 0)}</Text>
-          <Text style={styles.statCurrency}>Emalangeni</Text>
-        </Card>
-
-        <Card style={styles.statCard}>
-          <View style={styles.statHeader}>
-            <View style={styles.statIconContainer}>
-              <TrendingUp size={20} color="#10B981" />
-            </View>
-            <Text style={styles.statLabel}>Today's Revenue</Text>
-          </View>
-          <Text style={styles.statValue}>{formatCurrency(getTodaysRevenue())}</Text>
-          <Text style={styles.statCurrency}>Today</Text>
-        </Card>
-      </View>
-
-      <View style={styles.statsGrid}>
-        <Card style={styles.statCard}>
-          <View style={styles.statHeader}>
-            <View style={styles.statIconContainer}>
-              <Receipt size={20} color="#F59E0B" />
-            </View>
-            <Text style={styles.statLabel}>Total Transactions</Text>
-          </View>
-          <Text style={styles.statCount}>{transactions.length}</Text>
-          <Text style={styles.statCurrency}>All Time</Text>
-        </Card>
-
-        <Card style={styles.statCard}>
-          <View style={styles.statHeader}>
-            <View style={styles.statIconContainer}>
-              <Users size={20} color="#8B5CF6" />
-            </View>
-            <Text style={styles.statLabel}>Unique Customers</Text>
-          </View>
-          <Text style={styles.statCount}>{getUniqueCustomers()}</Text>
-          <Text style={styles.statCurrency}>Active</Text>
-        </Card>
-      </View>
-
-      {/* Quick Actions */}
-      <Card title="Business Tools">
-        <View style={styles.actionsGrid}>
-          <Button
-            title="💰 All Transactions"
-            onPress={() => router.push('/(tabs)/merchant/transactions')}
-            variant="primary"
-            style={styles.actionButton}
+    <MainLayout title="Business Dashboard" subtitle="Monitor your business performance">
+      <View style={styles.container}>
+        {/* Metrics Grid */}
+        <View style={styles.metricsGrid}>
+          <MetricCard
+            title="Total Products"
+            value={dashboardData.totalProducts}
+            icon={Package}
+            iconColor="#3B82F6"
+            trend={{ value: 12, isPositive: true }}
+            style={styles.metricCard}
           />
-          <Button
-            title="📊 Reports"
-            onPress={() => router.push('/(tabs)/merchant/reports')}
-            variant="secondary"
-            style={styles.actionButton}
+          <MetricCard
+            title="Inventory Value"
+            value={`£${dashboardData.inventoryValue.toFixed(2)}`}
+            icon={DollarSign}
+            iconColor="#10B981"
+            trend={{ value: 8, isPositive: true }}
+            style={styles.metricCard}
+          />
+          <MetricCard
+            title="Low Stock Items"
+            value={dashboardData.lowStockItems}
+            icon={TrendingDown}
+            iconColor="#EF4444"
+            trend={{ value: 15, isPositive: false }}
+            style={styles.metricCard}
+          />
+          <MetricCard
+            title="Today's Sales"
+            value={`£${getTodaysRevenue().toFixed(2)}`}
+            icon={ShoppingCart}
+            iconColor="#8B5CF6"
+            style={styles.metricCard}
           />
         </View>
-      </Card>
 
-      {/* Recent Payments */}
-      <Card title="Recent Payments">
-        {transactions.length === 0 ? (
-          <Text style={styles.noTransactions}>No payments received yet</Text>
-        ) : (
-          transactions.map((transaction) => (
-            <View key={transaction.id} style={styles.transactionItem}>
-              <View style={styles.transactionIcon}>
-                {getTransactionIcon(transaction.type)}
-              </View>
-              <View style={styles.transactionInfo}>
-                <Text style={styles.transactionCustomer}>
-                  From: {transaction.payerEmail}
-                </Text>
-                <Text style={styles.transactionDescription}>
-                  {transaction.description || transaction.type.replace('_', ' ').toUpperCase()}
-                </Text>
-                <Text style={styles.transactionDate}>
-                  {(transaction.timestamp instanceof Date ? 
-                    transaction.timestamp : 
-                    transaction.timestamp.toDate()).toLocaleDateString()}
-                </Text>
-              </View>
-              <Text style={styles.transactionAmount}>
-                +{formatCurrency(transaction.amount)}
-              </Text>
+        {/* Content Grid */}
+        <View style={styles.contentGrid}>
+          {/* Alert Panel */}
+          <View style={styles.alertSection}>
+            <AlertPanel 
+              items={lowStockItems}
+              onViewAll={() => router.push('/(tabs)/low-stock')}
+            />
+          </View>
+
+          {/* Business Tools */}
+          <Card title="Business Tools" style={styles.toolsCard}>
+            <View style={styles.toolsGrid}>
+              <Button
+                title="📦 Manage Products"
+                onPress={() => router.push('/(tabs)/products')}
+                variant="primary"
+                style={styles.toolButton}
+              />
+              <Button
+                title="📊 View Reports"
+                onPress={() => router.push('/(tabs)/merchant/reports')}
+                variant="secondary"
+                style={styles.toolButton}
+              />
+              <Button
+                title="💰 All Payments"
+                onPress={() => router.push('/(tabs)/merchant/transactions')}
+                variant="success"
+                style={styles.toolButton}
+              />
+              <Button
+                title="📈 Sales Analytics"
+                onPress={() => router.push('/(tabs)/sales')}
+                variant="secondary"
+                style={styles.toolButton}
+              />
             </View>
-          ))
-        )}
-        {transactions.length > 0 && (
-          <Button
-            title="View All Payments"
-            onPress={() => router.push('/(tabs)/merchant/transactions')}
-            variant="secondary"
-            size="small"
-            style={styles.viewAllButton}
-          />
-        )}
-      </Card>
-    </ScrollView>
+          </Card>
+
+          {/* Recent Payments */}
+          <Card title="Recent Payments" style={styles.paymentsCard}>
+            {transactions.length === 0 ? (
+              <Text style={styles.noPayments}>No payments received yet</Text>
+            ) : (
+              <View style={styles.paymentsList}>
+                {transactions.map((transaction) => (
+                  <View key={transaction.id} style={styles.paymentItem}>
+                    <View style={styles.paymentIcon}>
+                      <Receipt size={16} color="#10B981" />
+                    </View>
+                    <View style={styles.paymentInfo}>
+                      <Text style={styles.paymentCustomer}>
+                        {transaction.payerEmail}
+                      </Text>
+                      <Text style={styles.paymentDescription}>
+                        {transaction.description || transaction.type.replace('_', ' ')}
+                      </Text>
+                      <Text style={styles.paymentDate}>
+                        {(transaction.timestamp instanceof Date ? 
+                          transaction.timestamp : 
+                          transaction.timestamp.toDate()).toLocaleDateString()}
+                      </Text>
+                    </View>
+                    <Text style={styles.paymentAmount}>
+                      +{formatCurrency(transaction.amount)}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </Card>
+        </View>
+      </View>
+    </MainLayout>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#111827',
-    paddingHorizontal: 20,
+    padding: 24,
+    gap: 24,
   },
-  header: {
-    paddingTop: 60,
-    paddingBottom: 20,
-  },
-  headerContent: {
+  metricsGrid: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 20,
   },
-  greeting: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#F9FAFB',
-    flex: 1,
-    marginLeft: 12,
-  },
-  username: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    marginTop: 4,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  statCard: {
-    flex: 1,
-    marginHorizontal: 4,
-  },
-  statHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  statIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#374151',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 8,
-  },
-  statLabel: {
-    fontSize: 11,
-    color: '#9CA3AF',
+  metricCard: {
     flex: 1,
   },
-  statValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#F9FAFB',
-    marginBottom: 4,
-  },
-  statCount: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#3B82F6',
-    marginBottom: 4,
-  },
-  statCurrency: {
-    fontSize: 10,
-    color: '#6B7280',
-  },
-  actionsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  actionButton: {
+  contentGrid: {
     flex: 1,
-    marginHorizontal: 4,
+    flexDirection: 'row',
+    gap: 24,
   },
-  transactionItem: {
+  alertSection: {
+    flex: 1,
+  },
+  toolsCard: {
+    flex: 1,
+  },
+  paymentsCard: {
+    flex: 1,
+  },
+  toolsGrid: {
+    gap: 12,
+  },
+  toolButton: {
+    marginVertical: 4,
+  },
+  paymentsList: {
+    gap: 12,
+  },
+  paymentItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#374151',
+    paddingHorizontal: 16,
+    backgroundColor: '#374151',
+    borderRadius: 12,
   },
-  transactionIcon: {
+  paymentIcon: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#374151',
+    backgroundColor: '#065F46',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
   },
-  transactionInfo: {
+  paymentInfo: {
     flex: 1,
   },
-  transactionCustomer: {
+  paymentCustomer: {
     fontSize: 14,
     fontWeight: '600',
     color: '#F9FAFB',
   },
-  transactionDescription: {
+  paymentDescription: {
     fontSize: 12,
     color: '#9CA3AF',
     textTransform: 'capitalize',
     marginTop: 2,
   },
-  transactionDate: {
+  paymentDate: {
     fontSize: 12,
     color: '#9CA3AF',
     marginTop: 2,
   },
-  transactionAmount: {
+  paymentAmount: {
     fontSize: 14,
     fontWeight: '600',
     color: '#10B981',
   },
-  noTransactions: {
+  noPayments: {
     textAlign: 'center',
     color: '#9CA3AF',
     fontSize: 14,
     padding: 20,
-  },
-  viewAllButton: {
-    marginTop: 16,
   },
 });

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert, RefreshControl, FlatList } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Wallet, Plus, Receipt, ShoppingCart, Clock, TrendingUp, Smartphone, PackaTrendingDown, ge, DollarSign, TriangleAlert as AlertTriangle } from 'lucide-react-native';
+import { Wallet, Plus, Receipt, ShoppingCart, TrendingUp, Package, DollarSign, TrendingDown } from 'lucide-react-native';
+import { MainLayout } from '../../../components/MainLayout';
+import { MetricCard } from '../../../components/MetricCard';
+import { AlertPanel } from '../../../components/AlertPanel';
 import { Button } from '../../../components/Button';
-import { DashboardLayout } from '../../../components/DashboardLayout';
-import { DashboardCard } from '../../../components/DashboardCard';
-import { AlertCard } from '../../../components/AlertCard';
 import { Card } from '../../../components/Card';
 import { useAuth } from '../../../contexts/AuthContext';
 import { getUserTransactions } from '../../../services/walletService';
@@ -16,7 +16,6 @@ export default function ClientDashboard() {
   const { user } = useAuth();
   const router = useRouter();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [refreshing, setRefreshing] = useState(false);
 
   // Mock data for dashboard
   const dashboardData = {
@@ -29,21 +28,17 @@ export default function ClientDashboard() {
   const lowStockItems = [
     { id: '1', name: '1 QUIRE', sku: '04417484', currentStock: 2, minStock: 10 },
     { id: '2', name: '1 quire', sku: '6009631870000', currentStock: 2, minStock: 10 },
+    { id: '3', name: 'Office Supplies', sku: '12345678', currentStock: 1, minStock: 5 },
   ];
 
   useEffect(() => {
     if (user) {
       const unsubscribe = getUserTransactions(user.id, (userTransactions) => {
-        setTransactions(userTransactions.slice(0, 5)); // Show last 5 transactions
+        setTransactions(userTransactions.slice(0, 5));
       });
       return unsubscribe;
     }
   }, [user]);
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
-  };
 
   const getTransactionIcon = (type: string) => {
     switch (type) {
@@ -54,177 +49,175 @@ export default function ClientDashboard() {
       case 'product_payment':
         return <ShoppingCart size={16} color="#EF4444" />;
       default:
-        return <Clock size={16} color="#9CA3AF" />;
+        return <Wallet size={16} color="#9CA3AF" />;
     }
   };
 
   return (
-    <DashboardLayout 
-      title="Dashboard" 
-      subtitle="Welcome to your inventory management system"
-    >
-      <FlatList
-        style={styles.container}
-        data={[{ key: 'dashboard' }]}
-        renderItem={() => (
-          <View style={styles.content}>
-            {/* Dashboard Cards Grid */}
-            <View style={styles.cardsGrid}>
-              <View style={styles.cardRow}>
-                <DashboardCard
-                  title="Total Products"
-                  value={dashboardData.totalProducts}
-                  icon={Package}
-                  iconColor="#3B82F6"
-                  style={styles.card}
-                />
-                <DashboardCard
-                  title="Inventory Value"
-                  value={`£${dashboardData.inventoryValue.toFixed(2)}`}
-                  icon={DollarSign}
-                  iconColor="#10B981"
-                  style={styles.card}
-                />
-              </View>
-              
-              <View style={styles.cardRow}>
-                <DashboardCard
-                  title="Low Stock Items"
-                  value={dashboardData.lowStockItems}
-                  icon={TrendingDown}
-                  iconColor="#EF4444"
-                  style={styles.card}
-                />
-                <DashboardCard
-                  title="Today's Sales"
-                  value={`£${dashboardData.todaysSales.toFixed(2)}`}
-                  icon={ShoppingCart}
-                  iconColor="#8B5CF6"
-                  style={styles.card}
-                />
-              </View>
-            </View>
+    <MainLayout title="Dashboard" subtitle="Welcome to your inventory management system">
+      <View style={styles.container}>
+        {/* Metrics Grid */}
+        <View style={styles.metricsGrid}>
+          <MetricCard
+            title="Total Products"
+            value={dashboardData.totalProducts}
+            icon={Package}
+            iconColor="#3B82F6"
+            trend={{ value: 12, isPositive: true }}
+            style={styles.metricCard}
+          />
+          <MetricCard
+            title="Inventory Value"
+            value={`£${dashboardData.inventoryValue.toFixed(2)}`}
+            icon={DollarSign}
+            iconColor="#10B981"
+            trend={{ value: 8, isPositive: true }}
+            style={styles.metricCard}
+          />
+          <MetricCard
+            title="Low Stock Items"
+            value={dashboardData.lowStockItems}
+            icon={TrendingDown}
+            iconColor="#EF4444"
+            trend={{ value: 15, isPositive: false }}
+            style={styles.metricCard}
+          />
+          <MetricCard
+            title="Today's Sales"
+            value={`£${dashboardData.todaysSales.toFixed(2)}`}
+            icon={ShoppingCart}
+            iconColor="#8B5CF6"
+            style={styles.metricCard}
+          />
+        </View>
 
-            {/* Low Stock Alert */}
-            <AlertCard
-              title="Low Stock Alert"
+        {/* Content Grid */}
+        <View style={styles.contentGrid}>
+          {/* Alert Panel */}
+          <View style={styles.alertSection}>
+            <AlertPanel 
               items={lowStockItems}
+              onViewAll={() => router.push('/(tabs)/low-stock')}
             />
-
-            {/* Quick Actions */}
-            <Card title="Quick Actions">
-              <View style={styles.actionsGrid}>
-                <Button
-                  title="💳 Top Up Wallet"
-                  onPress={() => router.push('/(tabs)/client/top-up')}
-                  variant="success"
-                  style={styles.actionButton}
-                />
-                <Button
-                  title="📊 View Transactions"
-                  onPress={() => router.push('/(tabs)/client/transactions')}
-                  variant="secondary"
-                  style={styles.actionButton}
-                />
-              </View>
-              <View style={styles.actionsGrid}>
-                <Button
-                  title="📄 Pay Invoice"
-                  onPress={() => router.push('/(tabs)/client/pay-invoice')}
-                  variant="primary"
-                  style={styles.actionButton}
-                />
-                <Button
-                  title="🛒 Buy Products"
-                  onPress={() => router.push('/(tabs)/client/pay-product')}
-                  variant="primary"
-                  style={styles.actionButton}
-                />
-              </View>
-            </Card>
           </View>
-        )}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        showsVerticalScrollIndicator={false}
-      />
-    </DashboardLayout>
+
+          {/* Quick Actions */}
+          <Card title="Quick Actions" style={styles.actionsCard}>
+            <View style={styles.actionsGrid}>
+              <Button
+                title="💳 Top Up Wallet"
+                onPress={() => router.push('/(tabs)/client/top-up')}
+                variant="success"
+                style={styles.actionButton}
+              />
+              <Button
+                title="📄 Pay Invoice"
+                onPress={() => router.push('/(tabs)/client/pay-invoice')}
+                variant="primary"
+                style={styles.actionButton}
+              />
+              <Button
+                title="🛒 Buy Products"
+                onPress={() => router.push('/(tabs)/client/pay-product')}
+                variant="primary"
+                style={styles.actionButton}
+              />
+              <Button
+                title="📊 View Transactions"
+                onPress={() => router.push('/(tabs)/client/transactions')}
+                variant="secondary"
+                style={styles.actionButton}
+              />
+            </View>
+          </Card>
+
+          {/* Recent Transactions */}
+          <Card title="Recent Activity" style={styles.transactionsCard}>
+            {transactions.length === 0 ? (
+              <Text style={styles.noTransactions}>No recent transactions</Text>
+            ) : (
+              <View style={styles.transactionsList}>
+                {transactions.map((transaction) => (
+                  <View key={transaction.id} style={styles.transactionItem}>
+                    <View style={styles.transactionIcon}>
+                      {getTransactionIcon(transaction.type)}
+                    </View>
+                    <View style={styles.transactionInfo}>
+                      <Text style={styles.transactionDescription}>
+                        {transaction.description || transaction.type.replace('_', ' ')}
+                      </Text>
+                      <Text style={styles.transactionDate}>
+                        {(transaction.timestamp instanceof Date ? 
+                          transaction.timestamp : 
+                          transaction.timestamp.toDate()).toLocaleDateString()}
+                      </Text>
+                    </View>
+                    <Text style={[
+                      styles.transactionAmount,
+                      transaction.type === 'top_up' ? styles.positive : styles.negative
+                    ]}>
+                      {transaction.type === 'top_up' ? '+' : '-'}{formatCurrency(transaction.amount)}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </Card>
+        </View>
+      </View>
+    </MainLayout>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 24,
+    gap: 24,
   },
-  content: {
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-  },
-  cardsGrid: {
-    marginBottom: 20,
-  },
-  cardRow: {
+  metricsGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
+    gap: 20,
   },
-  card: {
+  metricCard: {
     flex: 1,
-    marginHorizontal: 6,
+  },
+  contentGrid: {
+    flex: 1,
+    flexDirection: 'row',
+    gap: 24,
+  },
+  alertSection: {
+    flex: 1,
+  },
+  actionsCard: {
+    flex: 1,
+  },
+  transactionsCard: {
+    flex: 1,
   },
   actionsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginVertical: 8,
+    gap: 12,
   },
   actionButton: {
-    flex: 1,
-    marginHorizontal: 4,
+    marginVertical: 4,
   },
-  balanceHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  balanceIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#1E3A8A',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  balanceLabel: {
-    fontSize: 16,
-    color: '#9CA3AF',
-  },
-  balanceAmount: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#F9FAFB',
-    marginBottom: 4,
-  },
-  balanceCurrency: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 20,
-  },
-  balanceActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  transactionsList: {
+    gap: 12,
   },
   transactionItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#374151',
+    paddingHorizontal: 16,
+    backgroundColor: '#374151',
+    borderRadius: 12,
   },
   transactionIcon: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#374151',
+    backgroundColor: '#1F2937',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -258,31 +251,5 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
     fontSize: 14,
     padding: 20,
-  },
-  viewAllButton: {
-    marginTop: 16,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  statItem: {
-    flex: 1,
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#374151',
-    borderRadius: 12,
-    marginHorizontal: 4,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#9CA3AF',
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  statValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#F9FAFB',
   },
 });
